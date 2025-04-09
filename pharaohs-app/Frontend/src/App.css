@@ -36,3 +36,37 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* App.css */
+.form-container {
+  max-width: 400px;
+  margin: 30px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+}
+
+.form-container h2, 
+.form-container h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.btn-custom {
+  width: 100%;
+  max-width: 200px;
+  margin: 10px auto;
+  display: block;
+}
+
+input.form-control, 
+select.form-select, 
+textarea.form-control {
+  max-width: 50%;
+  font-size: 0.9rem;
+  margin: 0 auto; 
+}
