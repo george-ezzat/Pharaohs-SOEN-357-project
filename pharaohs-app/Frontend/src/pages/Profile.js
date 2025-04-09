@@ -7,9 +7,9 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [producerProducts, setProducerProducts] = useState([]);
   const [consumerData, setConsumerData] = useState(null);
+  const [receipts, setReceipts] = useState([]);
   const navigate = useNavigate();
 
-  // Get user from localStorage
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
     if (!storedUser) {
@@ -17,22 +17,25 @@ const Profile = () => {
       return;
     }
     setUser(storedUser);
-    // Fetch additional user details
     fetch(`http://localhost:5000/api/users/${storedUser._id}`)
       .then(res => res.json())
       .then(data => setConsumerData(data))
       .catch(err => console.error(err));
 
-    // If producer, fetch their products
     if (storedUser.role === 'producer') {
       fetch(`http://localhost:5000/api/users/${storedUser._id}/products`)
         .then(res => res.json())
         .then(data => setProducerProducts(data))
         .catch(err => console.error(err));
+    } else {
+      // For consumers, fetch receipts
+      fetch(`http://localhost:5000/api/users/${storedUser._id}/receipts`)
+         .then(res => res.json())
+         .then(data => setReceipts(data))
+         .catch(err => console.error(err));
     }
   }, [navigate]);
 
-  // Delete a product listing (for producers)
   const handleDelete = async (productId) => {
     try {
       const res = await fetch(`http://localhost:5000/api/products/${productId}`, {
@@ -72,7 +75,9 @@ const Profile = () => {
                       <h5 className="card-title">{product.name}</h5>
                       <p className="card-text">${product.price}</p>
                       <Link to={`/edit-product/${product._id}`} className="btn btn-warning me-2">Edit</Link>
-                      <button className="btn btn-danger" onClick={() => handleDelete(product._id)}>Delete</button>
+                      <button className="btn btn-danger" onClick={() => handleDelete(product._id)}>
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -97,8 +102,26 @@ const Profile = () => {
                     <div className="card-body">
                       <h5 className="card-title">{product.name}</h5>
                       <p className="card-text">${product.price}</p>
-                      {/* Removal from cart can be added similarly */}
                     </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {receipts && receipts.length > 0 && (
+            <div>
+              <h3>My Receipts</h3>
+              {receipts.map(r => (
+                <div key={r._id} className="card my-2">
+                  <div className="card-body">
+                    <h5 className="card-title">Receipt - ${r.total.toFixed(2)}</h5>
+                    <p className="card-text">Purchased on: {new Date(r.date).toLocaleString()}</p>
+                    <p className="card-text">Card: {r.paymentInfo.cardType} ending in {r.paymentInfo.cardLast4}</p>
+                    <ul>
+                      {r.products.map(item => (
+                        <li key={item.productId}>{item.name} - ${item.price}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               ))}

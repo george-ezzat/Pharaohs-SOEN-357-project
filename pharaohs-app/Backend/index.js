@@ -24,7 +24,7 @@ const productSchema = new mongoose.Schema({
   category: String,
   description: String,
   imageUrl: String,
-  // This field tracks which user (producer) created the product.
+  // The creator’s (producer’s) user id
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
@@ -36,11 +36,28 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true},
   password: { type: String, required: true },
   role: { type: String, enum: ['consumer', 'producer'], default: 'consumer' },
-  // For consumers, keep a cart (an array of product references)
+  // For consumers, store an array of product references as their cart
   cart: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
+
+/* --- Receipt Model --- */
+const receiptSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  products: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    name: String,
+    price: Number
+  }],
+  total: Number,
+  paymentInfo: {
+    cardLast4: String,
+    cardType: String
+  },
+  date: { type: Date, default: Date.now }
+});
+const Receipt = mongoose.model('Receipt', receiptSchema);
 
 /* --- API Endpoints --- */
 
@@ -103,7 +120,7 @@ app.get('/api/users/:userId/products', async (req, res) => {
   }
 });
 
-// Add product (for producers; expects userId in the request body)
+// Add product (for producers; expects userId in request body)
 app.post('/api/products', async (req, res) => {
   const { name, price, category, description, imageUrl, userId } = req.body;
   const product = new Product({ name, price, category, description, imageUrl, createdBy: userId });
@@ -115,13 +132,12 @@ app.post('/api/products', async (req, res) => {
   }
 });
 
-// Update product (only the owner should update; here we assume the frontend sends valid data)
+// Update product (only owner should update)
 app.put('/api/products/:id', async (req, res) => {
   const { name, price, category, description, imageUrl } = req.body;
   try {
     const product = await Product.findById(req.params.id);
     if(!product) return res.status(404).json({ message: "Product not found" });
-    // Update fields
     product.name = name;
     product.price = price;
     product.category = category;
@@ -174,7 +190,50 @@ app.delete('/api/users/:userId/cart/:productId', async (req, res) => {
   }
 });
 
-// Fetch all products (public)
+// --- Payment / Checkout ---
+// Mock payment endpoint: processes a checkout, creates a receipt, and clears the user's cart.
+app.post('/api/checkout', async (req, res) => {
+  const { userId, cardNumber, cardType } = req.body;
+  try {
+    const user = await User.findById(userId).populate('cart');
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.cart.length === 0) return res.status(400).json({ message: "Cart is empty" });
+    let total = 0;
+    const items = user.cart.map(item => {
+      total += item.price;
+      return {
+        productId: item._id,
+        name: item.name,
+        price: item.price
+      };
+    });
+    const receipt = new Receipt({
+      user: userId,
+      products: items,
+      total,
+      paymentInfo: { cardLast4: cardNumber.slice(-4), cardType }
+    });
+    await receipt.save();
+    // Clear the user's cart
+    user.cart = [];
+    await user.save();
+    res.json({ message: "Payment successful", receipt });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get receipts for a user
+app.get('/api/users/:userId/receipts', async (req, res) => {
+  try {
+    const receipts = await Receipt.find({ user: req.params.userId });
+    res.json(receipts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Public endpoints for products
 app.get('/api/products', async (req, res) => {
   try {
     const products = await Product.find();
@@ -183,8 +242,6 @@ app.get('/api/products', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-// Fetch single product by ID (public)
 app.get('/api/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);

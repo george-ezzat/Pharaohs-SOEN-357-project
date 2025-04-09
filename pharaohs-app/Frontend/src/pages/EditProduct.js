@@ -15,7 +15,6 @@ const EditProduct = () => {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  // Fetch product details to pre-fill form
   useEffect(() => {
     fetch(`http://localhost:5000/api/products/${id}`)
       .then(res => res.json())

@@ -10,7 +10,7 @@ const BottomNav = () => {
   const handleSignOut = () => {
     localStorage.removeItem('user');
     navigate('/');
-    window.location.reload();  // Ensures UI updates on sign out
+    window.location.reload();  // Update UI on sign out
   };
 
   return (
