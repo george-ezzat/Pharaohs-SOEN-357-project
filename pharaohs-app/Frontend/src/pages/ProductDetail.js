@@ -1,8 +1,6 @@
 // src/pages/ProductDetail.js
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
-import db from '../firebase';
 import BottomNav from '../components/BottomNav';
 
 const ProductDetail = () => {
@@ -10,15 +8,15 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const navigate = useNavigate();
 
+  // Fetch a product by ID from the API
   useEffect(() => {
     const fetchProduct = async () => {
-      const docRef = doc(db, 'products', id);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        setProduct(docSnap.data());
-      } else {
-        console.error("No such product!");
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/${id}`);
+        const data = await response.json();
+        setProduct(data);
+      } catch (error) {
+        console.error("Error fetching product:", error);
       }
     };
 
@@ -34,7 +32,6 @@ const ProductDetail = () => {
       <img src={product.imageUrl} alt={product.name} className="img-fluid" />
       <p>Price: ${product.price}</p>
       <p>{product.description}</p>
-      {/* You could also display alternatives here */}
       <BottomNav />
     </div>
   );

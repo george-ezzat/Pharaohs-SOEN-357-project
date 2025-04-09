@@ -2,27 +2,29 @@
 import React, { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import BottomNav from '../components/BottomNav';
-import { collection, getDocs } from 'firebase/firestore';
-import db from '../firebase'; // our Firestore instance
 
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [filter, setFilter] = useState('all');
 
-  // Fetch products from Firestore
+  // Fetch products from your Express API
   useEffect(() => {
     const fetchProducts = async () => {
-      const querySnapshot = await getDocs(collection(db, 'products'));
-      const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setProducts(items);
+      try {
+        const response = await fetch('http://localhost:5000/api/products');
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
     };
 
     fetchProducts();
   }, []);
 
   // Filter products based on selected category
-  const filteredProducts = filter === 'all' 
-    ? products 
+  const filteredProducts = filter === 'all'
+    ? products
     : products.filter(product => product.category === filter);
 
   return (
@@ -43,12 +45,11 @@ const Home = () => {
       {/* Product Cards */}
       <div className="row">
         {filteredProducts.map(product => (
-          <div className="col-md-4 mb-4" key={product.id}>
+          <div className="col-md-4 mb-4" key={product._id}>
             <ProductCard product={product} />
           </div>
         ))}
       </div>
-      {/* Bottom Navigation */}
       <BottomNav />
     </div>
   );
