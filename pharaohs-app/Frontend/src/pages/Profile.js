@@ -17,7 +17,7 @@ const Profile = () => {
       return;
     }
     setUser(storedUser);
-    // Fetch additional user details from backend
+    // Fetch additional user details
     fetch(`http://localhost:5000/api/users/${storedUser._id}`)
       .then(res => res.json())
       .then(data => setConsumerData(data))
@@ -79,7 +79,9 @@ const Profile = () => {
               ))}
             </div>
           )}
-          <button className="btn btn-primary" onClick={() => navigate('/add-product')}>Add New Product</button>
+          <button className="btn btn-primary" onClick={() => navigate('/add-product')}>
+            Add New Product
+          </button>
         </>
       ) : (
         <>
@@ -95,7 +97,7 @@ const Profile = () => {
                     <div className="card-body">
                       <h5 className="card-title">{product.name}</h5>
                       <p className="card-text">${product.price}</p>
-                      {/* For simplicity, removal from cart could be handled with an extra endpoint */}
+                      {/* Removal from cart can be added similarly */}
                     </div>
                   </div>
                 </div>

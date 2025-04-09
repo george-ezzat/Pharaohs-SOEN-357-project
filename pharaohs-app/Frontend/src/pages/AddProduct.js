@@ -14,6 +14,9 @@ const AddProduct = () => {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
+  // Get user info from localStorage
+  const user = JSON.parse(localStorage.getItem('user'));
+
   const { name, price, category, description, imageUrl } = formData;
 
   const handleChange = (e) => {
@@ -25,21 +28,20 @@ const AddProduct = () => {
     try {
       const res = await fetch('http://localhost:5000/api/products', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
           price: parseFloat(price),
           category,
           description,
-          imageUrl
+          imageUrl,
+          userId: user._id  // include the creator’s id
         })
       });
       const data = await res.json();
       if (res.ok) {
         setMessage('Product added successfully!');
-        navigate('/'); // redirect to home page
+        navigate('/');
       } else {
         setMessage(data.message || 'Failed to add product.');
       }

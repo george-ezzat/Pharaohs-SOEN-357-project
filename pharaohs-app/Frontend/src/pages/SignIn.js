@@ -22,7 +22,7 @@ const SignIn = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        // Save logged-in user info in localStorage (for demo purposes)
+        // Save user info in localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
         setMessage('Sign in successful!');
         navigate('/profile');
