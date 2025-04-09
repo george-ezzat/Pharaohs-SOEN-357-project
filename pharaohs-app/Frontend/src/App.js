@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Scan from './pages/Scan';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
+import Payment from './pages/Payment';
 import SignUp from './pages/SignUp';
 import SignIn from './pages/SignIn';
 import AddProduct from './pages/AddProduct';
@@ -20,6 +21,7 @@ function App() {
         <Route path="/scan" element={<Scan />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/payment" element={<Payment />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/add-product" element={<AddProduct />} />

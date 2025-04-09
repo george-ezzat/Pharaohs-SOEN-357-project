@@ -52,8 +52,11 @@ const receiptSchema = new mongoose.Schema({
   }],
   total: Number,
   paymentInfo: {
+    cardHolder: String,
+    // We store only the last 4 digits of the card number for safety.
     cardLast4: String,
-    cardType: String
+    expiryDate: String,
+    cvv: String
   },
   date: { type: Date, default: Date.now }
 });
@@ -66,7 +69,7 @@ app.post('/api/signup', async (req, res) => {
   const { username, email, password, role } = req.body;
   try {
     const existingUser = await User.findOne({ email });
-    if(existingUser) {
+    if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -83,10 +86,9 @@ app.post('/api/signin', async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if(!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
     const isMatch = await bcrypt.compare(password, user.password);
-    if(!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-    // Do not return the password.
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
     const userData = {
       _id: user._id,
       username: user.username,
@@ -103,7 +105,7 @@ app.post('/api/signin', async (req, res) => {
 app.get('/api/users/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).populate('cart');
-    if(!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -137,7 +139,7 @@ app.put('/api/products/:id', async (req, res) => {
   const { name, price, category, description, imageUrl } = req.body;
   try {
     const product = await Product.findById(req.params.id);
-    if(!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ message: "Product not found" });
     product.name = name;
     product.price = price;
     product.category = category;
@@ -145,7 +147,7 @@ app.put('/api/products/:id', async (req, res) => {
     product.imageUrl = imageUrl;
     const updatedProduct = await product.save();
     res.json(updatedProduct);
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
@@ -154,10 +156,10 @@ app.put('/api/products/:id', async (req, res) => {
 app.delete('/api/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if(!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ message: "Product not found" });
     await product.remove();
     res.json({ message: "Product deleted successfully" });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
@@ -167,8 +169,8 @@ app.post('/api/users/:userId/cart', async (req, res) => {
   const { productId } = req.body;
   try {
     const user = await User.findById(req.params.userId);
-    if(!user) return res.status(404).json({ message: "User not found" });
-    if(user.role !== 'consumer') return res.status(400).json({ message: "Only consumers have a cart" });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.role !== 'consumer') return res.status(400).json({ message: "Only consumers have a cart" });
     user.cart.push(productId);
     await user.save();
     res.json({ message: "Product added to cart", cart: user.cart });
@@ -191,9 +193,9 @@ app.delete('/api/users/:userId/cart/:productId', async (req, res) => {
 });
 
 // --- Payment / Checkout ---
-// Mock payment endpoint: processes a checkout, creates a receipt, and clears the user's cart.
+// Updated checkout endpoint to expect detailed payment fields.
 app.post('/api/checkout', async (req, res) => {
-  const { userId, cardNumber, cardType } = req.body;
+  const { userId, cardHolder, cardNumber, expiryDate, cvv } = req.body;
   try {
     const user = await User.findById(userId).populate('cart');
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -207,14 +209,16 @@ app.post('/api/checkout', async (req, res) => {
         price: item.price
       };
     });
+    // Remove spaces and get last 4 digits of card number.
+    const last4 = cardNumber.replace(/\s+/g, '').slice(-4);
     const receipt = new Receipt({
       user: userId,
       products: items,
       total,
-      paymentInfo: { cardLast4: cardNumber.slice(-4), cardType }
+      paymentInfo: { cardHolder, cardLast4: last4, expiryDate, cvv }
     });
     await receipt.save();
-    // Clear the user's cart
+    // Clear user's cart
     user.cart = [];
     await user.save();
     res.json({ message: "Payment successful", receipt });
@@ -242,6 +246,7 @@ app.get('/api/products', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 app.get('/api/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
