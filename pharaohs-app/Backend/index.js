@@ -24,6 +24,8 @@ const productSchema = new mongoose.Schema({
   category: String,
   description: String,
   imageUrl: String,
+  // New rating field (from 0 to 5)
+  rating: { type: Number, default: 0 },
   // The creator’s (producer’s) user id
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
@@ -32,12 +34,12 @@ const Product = mongoose.model('Product', productSchema);
 
 /* --- User Model --- */
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true},
-  email: { type: String, required: true, unique: true},
+  username: { type: String, required: true, unique: true },
+  email:    { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['consumer', 'producer'], default: 'consumer' },
+  role:     { type: String, enum: ['consumer', 'producer'], default: 'consumer' },
   // For consumers, store an array of product references as their cart
-  cart: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
+  cart:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
@@ -53,7 +55,7 @@ const receiptSchema = new mongoose.Schema({
   total: Number,
   paymentInfo: {
     cardHolder: String,
-    // We store only the last 4 digits of the card number for safety.
+    // Only storing the last 4 digits for safety.
     cardLast4: String,
     expiryDate: String,
     cvv: String
@@ -69,7 +71,7 @@ app.post('/api/signup', async (req, res) => {
   const { username, email, password, role } = req.body;
   try {
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    if(existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -86,9 +88,9 @@ app.post('/api/signin', async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if(!user) return res.status(400).json({ message: "Invalid credentials" });
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    if(!isMatch) return res.status(400).json({ message: "Invalid credentials" });
     const userData = {
       _id: user._id,
       username: user.username,
@@ -105,7 +107,7 @@ app.post('/api/signin', async (req, res) => {
 app.get('/api/users/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).populate('cart');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if(!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -122,10 +124,18 @@ app.get('/api/users/:userId/products', async (req, res) => {
   }
 });
 
-// Add product (for producers; expects userId in request body)
+// Add product (for producers; expects userId and rating in request body)
 app.post('/api/products', async (req, res) => {
-  const { name, price, category, description, imageUrl, userId } = req.body;
-  const product = new Product({ name, price, category, description, imageUrl, createdBy: userId });
+  const { name, price, category, description, imageUrl, userId, rating } = req.body;
+  const product = new Product({ 
+    name, 
+    price, 
+    category, 
+    description, 
+    imageUrl, 
+    rating: rating || 0, 
+    createdBy: userId 
+  });
   try {
     const newProduct = await product.save();
     res.status(201).json(newProduct);
@@ -135,8 +145,9 @@ app.post('/api/products', async (req, res) => {
 });
 
 // Update product (only owner should update)
+// Allow updating rating field as well.
 app.put('/api/products/:id', async (req, res) => {
-  const { name, price, category, description, imageUrl } = req.body;
+  const { name, price, category, description, imageUrl, rating } = req.body;
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
@@ -145,6 +156,9 @@ app.put('/api/products/:id', async (req, res) => {
     product.category = category;
     product.description = description;
     product.imageUrl = imageUrl;
+    if (typeof rating !== 'undefined') {
+      product.rating = rating;
+    }
     const updatedProduct = await product.save();
     res.json(updatedProduct);
   } catch (err) {
@@ -209,7 +223,6 @@ app.post('/api/checkout', async (req, res) => {
         price: item.price
       };
     });
-    // Remove spaces and get last 4 digits of card number.
     const last4 = cardNumber.replace(/\s+/g, '').slice(-4);
     const receipt = new Receipt({
       user: userId,
@@ -246,7 +259,6 @@ app.get('/api/products', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
 app.get('/api/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
