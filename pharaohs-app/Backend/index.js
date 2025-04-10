@@ -269,5 +269,18 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
+// Endpoint: Check if product is Canadian made using barcode
+app.get('/api/products/canadian', async (req, res) => {
+  const { barcode } = req.query;
+  if (!barcode) {
+    return res.status(400).json({ message: "Barcode is required" });
+  }
+  // Dummy logic: if the last digit of the barcode is even, we say it's Canadian made.
+  const lastDigit = parseInt(barcode.slice(-1), 10);
+  const isCanadianMade = !isNaN(lastDigit) && (lastDigit % 2 === 0);
+  res.json({ barcode, isCanadianMade });
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

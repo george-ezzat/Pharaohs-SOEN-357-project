@@ -6,14 +6,34 @@ import BottomNav from '../components/BottomNav';
 
 const Scan = () => {
   const [data, setData] = useState('Not Found');
+  const [lookupResult, setLookupResult] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleUpdate = (err, result) => {
+  const handleUpdate = async (err, result) => {
     if (result) {
-      setData(result.text);
-      // Optionally, trigger a lookup in Firestore for the product using the barcode.
-      // For example:
-      // navigate(`/product/${result.text}`);
+      const scannedBarcode = result.text;
+      setData(scannedBarcode);
+      setLookupResult(null);
+      setLoading(true);
+      try {
+        // Call the backend endpoint with the scanned barcode
+        const response = await fetch(`http://localhost:5000/api/products/canadian?barcode=${scannedBarcode}`);
+        const json = await response.json();
+        if (response.ok) {
+          setLookupResult(
+            json.isCanadianMade 
+              ? "This product is Canadian made." 
+              : "This product is not Canadian made."
+          );
+        } else {
+          setLookupResult("Product lookup failed.");
+        }
+      } catch (error) {
+        console.error(error);
+        setLookupResult("Error during product lookup.");
+      }
+      setLoading(false);
     } else if (err) {
       console.error(err);
     }
@@ -29,7 +49,9 @@ const Scan = () => {
           onUpdate={handleUpdate}
         />
       </div>
-      <p>Scanned Data: {data}</p>
+      <p><strong>Scanned Barcode:</strong> {data}</p>
+      {loading && <p>Looking up product...</p>}
+      {lookupResult && <p><strong>Lookup Result:</strong> {lookupResult}</p>}
       <BottomNav />
     </div>
   );
