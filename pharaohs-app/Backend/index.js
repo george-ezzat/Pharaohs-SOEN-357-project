@@ -3,14 +3,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const axios = require('axios');
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Replace with your actual MongoDB connection string and target database name
 const MONGODB_URI = 'mongodb+srv://stevengourgy:1234@cluster0.r8ei8lm.mongodb.net/myDatabase?retryWrites=true&w=majority&appName=Cluster0';
 
 mongoose.connect(MONGODB_URI)
@@ -24,9 +23,7 @@ const productSchema = new mongoose.Schema({
   category: String,
   description: String,
   imageUrl: String,
-  // New rating field (from 0 to 5)
   rating: { type: Number, default: 0 },
-  // The creator’s (producer’s) user id
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
@@ -38,7 +35,6 @@ const userSchema = new mongoose.Schema({
   email:    { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role:     { type: String, enum: ['consumer', 'producer'], default: 'consumer' },
-  // For consumers, store an array of product references as their cart
   cart:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
 }, { timestamps: true });
 
@@ -55,7 +51,6 @@ const receiptSchema = new mongoose.Schema({
   total: Number,
   paymentInfo: {
     cardHolder: String,
-    // Only storing the last 4 digits for safety.
     cardLast4: String,
     expiryDate: String,
     cvv: String
@@ -65,6 +60,49 @@ const receiptSchema = new mongoose.Schema({
 const Receipt = mongoose.model('Receipt', receiptSchema);
 
 /* --- API Endpoints --- */
+
+app.get('/api/products/lookup', async (req, res) => {
+  const { barcode } = req.query;
+  if (!barcode) {
+    return res.status(400).json({ message: "Barcode is required" });
+  }
+  
+  try {
+    // Use the UPCitemdb trial endpoint. (For production, consider obtaining an API key.)
+    const apiUrl = `https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`;
+    const response = await axios.get(apiUrl);
+    
+    // Check if the API returned any items
+    if (response.data.code !== "OK" || !response.data.items || response.data.items.length === 0) {
+      return res.status(404).json({ message: "Product not found for this barcode." });
+    }
+    
+    const productInfo = response.data.items[0];
+    
+    // Example logic to determine if it’s Canadian made.
+    // (Adjust this check according to the data available – UPCitemdb does not reliably return country-of-origin data.
+    // For demo purposes, we simply check if the brand or description contains "Canada".)
+    let isCanadianMade = false;
+    const lowerBrand = productInfo.brand ? productInfo.brand.toLowerCase() : "";
+    const lowerDescription = productInfo.description ? productInfo.description.toLowerCase() : "";
+    if (lowerBrand.includes("canada") || lowerDescription.includes("canada")) {
+      isCanadianMade = true;
+    }
+    
+    // Return the detailed info
+    res.json({
+      barcode,
+      productName: productInfo.title,
+      description: productInfo.description,
+      brand: productInfo.brand,
+      category: productInfo.category,
+      isCanadianMade
+    });
+  } catch (error) {
+    console.error("Lookup error:", error.message);
+    res.status(500).json({ message: "Error during product lookup", error: error.message });
+  }
+});
 
 // Signup endpoint
 app.post('/api/signup', async (req, res) => {
@@ -145,7 +183,6 @@ app.post('/api/products', async (req, res) => {
 });
 
 // Update product (only owner should update)
-// Allow updating rating field as well.
 app.put('/api/products/:id', async (req, res) => {
   const { name, price, category, description, imageUrl, rating } = req.body;
   try {
@@ -231,7 +268,6 @@ app.post('/api/checkout', async (req, res) => {
       paymentInfo: { cardHolder, cardLast4: last4, expiryDate, cvv }
     });
     await receipt.save();
-    // Clear user's cart
     user.cart = [];
     await user.save();
     res.json({ message: "Payment successful", receipt });
@@ -275,7 +311,6 @@ app.get('/api/products/canadian', async (req, res) => {
   if (!barcode) {
     return res.status(400).json({ message: "Barcode is required" });
   }
-  // Dummy logic: if the last digit of the barcode is even, we say it's Canadian made.
   const lastDigit = parseInt(barcode.slice(-1), 10);
   const isCanadianMade = !isNaN(lastDigit) && (lastDigit % 2 === 0);
   res.json({ barcode, isCanadianMade });
