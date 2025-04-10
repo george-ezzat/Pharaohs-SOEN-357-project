@@ -145,6 +145,7 @@ const Payment = () => {
             className="form-control"
             id="cvv"
             name="cvv"
+            maxLength={3}
             value={paymentData.cvv}
             onChange={handleChange}
             placeholder="123"
