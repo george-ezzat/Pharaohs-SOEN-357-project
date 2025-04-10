@@ -1,4 +1,3 @@
-// src/pages/Profile.js
 import React, { useState, useEffect } from 'react';
 import BottomNav from '../components/BottomNav';
 import { useNavigate, Link } from 'react-router-dom';

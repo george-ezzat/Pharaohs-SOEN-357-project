@@ -1,4 +1,3 @@
-// src/pages/SignUp.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
@@ -30,7 +29,7 @@ const SignUp = () => {
       const data = await res.json();
       if (res.ok) {
          setMessage('Sign up successful!');
-         // For producers, go to add-product; for consumers, go home.
+        
          if (role === 'producer') {
            navigate('/add-product');
          } else {

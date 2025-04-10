@@ -1,4 +1,3 @@
-// src/pages/SignIn.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';

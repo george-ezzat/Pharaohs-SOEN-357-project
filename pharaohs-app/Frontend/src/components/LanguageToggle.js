@@ -1,4 +1,3 @@
-// src/components/LanguageToggle.js
 import React from 'react';
 
 const LanguageToggle = ({ language, setLanguage }) => {

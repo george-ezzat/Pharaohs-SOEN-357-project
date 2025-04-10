@@ -68,20 +68,18 @@ app.get('/api/products/lookup', async (req, res) => {
   }
   
   try {
-    // Use the UPCitemdb trial endpoint. (For production, consider obtaining an API key.)
+  
     const apiUrl = `https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`;
     const response = await axios.get(apiUrl);
     
-    // Check if the API returned any items
+ 
     if (response.data.code !== "OK" || !response.data.items || response.data.items.length === 0) {
       return res.status(404).json({ message: "Product not found for this barcode." });
     }
     
     const productInfo = response.data.items[0];
     
-    // Example logic to determine if it’s Canadian made.
-    // (Adjust this check according to the data available – UPCitemdb does not reliably return country-of-origin data.
-    // For demo purposes, we simply check if the brand or description contains "Canada".)
+
     let isCanadianMade = false;
     const lowerBrand = productInfo.brand ? productInfo.brand.toLowerCase() : "";
     const lowerDescription = productInfo.description ? productInfo.description.toLowerCase() : "";
@@ -89,7 +87,7 @@ app.get('/api/products/lookup', async (req, res) => {
       isCanadianMade = true;
     }
     
-    // Return the detailed info
+
     res.json({
       barcode,
       productName: productInfo.title,
@@ -104,7 +102,7 @@ app.get('/api/products/lookup', async (req, res) => {
   }
 });
 
-// Signup endpoint
+
 app.post('/api/signup', async (req, res) => {
   const { username, email, password, role } = req.body;
   try {

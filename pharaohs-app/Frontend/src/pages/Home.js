@@ -1,15 +1,14 @@
-// src/pages/Home.js
 import React, { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
 import BottomNav from '../components/BottomNav';
 
 const Home = () => {
-  // Original state
+
   const [products, setProducts] = useState([]);
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // New sidebar filter state variables
+
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [minRating, setMinRating] = useState('');
@@ -28,23 +27,21 @@ const Home = () => {
     fetchProducts();
   }, []);
 
-  // Apply filters in order:
-  // 1. Top category filter
+
   const categoryFiltered =
     filter === 'all'
       ? products
       : products.filter(product => product.category === filter);
-  // 2. Search query filter (by product name, case‑insensitive)
   const searchFiltered = categoryFiltered.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  // 3. Price filter from sidebar
+  
   const priceFiltered = searchFiltered.filter(product => {
     const meetsMin = minPrice === '' || product.price >= parseFloat(minPrice);
     const meetsMax = maxPrice === '' || product.price <= parseFloat(maxPrice);
     return meetsMin && meetsMax;
   });
-  // 4. Minimum rating filter
+ 
   const displayedProducts = priceFiltered.filter(product =>
     minRating === '' || product.rating >= parseInt(minRating)
   );

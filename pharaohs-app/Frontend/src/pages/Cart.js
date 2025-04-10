@@ -1,4 +1,3 @@
-// src/pages/Cart.js
 import React, { useState, useEffect } from 'react';
 import BottomNav from '../components/BottomNav';
 import { useNavigate } from 'react-router-dom';
@@ -38,8 +37,7 @@ const Cart = () => {
       if (res.ok) {
         setCart(data.cart);
         const t = data.cart.reduce((acc, id) => {
-          // We can re-fetch the entire cart on removal to update the total.
-          return acc; // Alternatively, recompute total here if you have full details.
+          return acc; 
         }, 0);
       } else {
         alert(data.message);

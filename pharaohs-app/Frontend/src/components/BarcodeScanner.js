@@ -12,7 +12,7 @@ const BarcodeScanner = ({ onDetected }) => {
           type: "LiveStream",
           target: scannerRef.current,
           constraints: {
-            facingMode: "environment" // use the rear camera
+            facingMode: "environment" 
           },
         },
         decoder: {

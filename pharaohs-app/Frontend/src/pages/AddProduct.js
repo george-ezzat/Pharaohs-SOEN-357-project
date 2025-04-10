@@ -1,4 +1,3 @@
-// src/pages/AddProduct.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
@@ -10,7 +9,7 @@ const AddProduct = () => {
     category: 'food',
     description: '',
     imageUrl: '',
-    rating: 0 // New rating field
+    rating: 0 
   });
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
