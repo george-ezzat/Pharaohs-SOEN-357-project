@@ -6,6 +6,7 @@ import BottomNav from '../components/BottomNav';
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState(''); // New state for search
 
   // Fetch products from your Express API
   useEffect(() => {
@@ -22,14 +23,32 @@ const Home = () => {
     fetchProducts();
   }, []);
 
-  // Filter products based on selected category
-  const filteredProducts = filter === 'all'
-    ? products
-    : products.filter(product => product.category === filter);
+  // Filter products based on category first…
+  const categoryFiltered =
+    filter === 'all'
+      ? products
+      : products.filter(product => product.category === filter);
+
+  // …then filter them with the search query (case-insensitive match on name)
+  const displayedProducts = categoryFiltered.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="container my-4">
       <h1>ScanLocal</h1>
+      
+      {/* Search Bar */}
+      <div className="mb-3" style={{ maxWidth: '400px', margin: '0 auto' }}>
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search products..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+      
       {/* Category Filter Buttons */}
       <div className="btn-group my-3" role="group">
         {['all', 'food', 'furniture', 'games', 'health', 'sports'].map(category => (
@@ -44,7 +63,7 @@ const Home = () => {
 
       {/* Product Cards */}
       <div className="row">
-        {filteredProducts.map(product => (
+        {displayedProducts.map(product => (
           <div className="col-md-4 mb-4" key={product._id}>
             <ProductCard product={product} />
           </div>

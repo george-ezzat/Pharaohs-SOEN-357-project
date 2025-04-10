@@ -61,16 +61,17 @@ const Cart = () => {
           <div className="row">
             {cart.map(product => (
               <div className="col-md-4 mb-4" key={product._id}>
-                <div className="card">
-                  <img src={product.imageUrl} className="card-img-top" alt={product.name} />
-                  <div className="card-body">
-                    <h5 className="card-title">{product.name}</h5>
-                    <p className="card-text">${product.price}</p>
-                    <button className="btn btn-danger" onClick={() => removeFromCart(product._id)}>
-                      Remove
-                    </button>
-                  </div>
+                <div className="card product-card">
+                <img src={product.imageUrl} className="card-img-top" alt={product.name} />
+                <div className="card-body">
+                  <h5 className="card-title">{product.name}</h5>
+                  <p className="card-text">${product.price}</p>
+                  <button className="btn btn-danger" onClick={() => removeFromCart(product._id)}>
+                    Remove
+                  </button>
                 </div>
+              </div>
+
               </div>
             ))}
           </div>

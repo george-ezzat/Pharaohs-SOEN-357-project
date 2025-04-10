@@ -1,7 +1,7 @@
 // src/components/BottomNav.js
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaShoppingCart, FaCamera, FaHome, FaSearch, FaUser } from 'react-icons/fa';
+import { FaShoppingCart, FaCamera, FaHome, FaUser } from 'react-icons/fa';
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -22,9 +22,7 @@ const BottomNav = () => {
         <li className="nav-item">
           <Link className="nav-link" to="/scan"><FaCamera size={24} /></Link>
         </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/search"><FaSearch size={24} /></Link>
-        </li>
+      
         <li className="nav-item">
           <Link className="nav-link" to="/cart"><FaShoppingCart size={24} /></Link>
         </li>

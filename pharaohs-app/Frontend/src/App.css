@@ -70,3 +70,23 @@ textarea.form-control {
   font-size: 0.9rem;
   margin: 0 auto; 
 }
+
+
+.product-card {
+  width: 20rem;
+  height: 30rem;
+  margin: 10px auto;
+}
+
+.product-card img {
+  height: 20rem;
+  object-fit: cover;
+}
+
+.product-card .card-title {
+  font-size: 1.1rem;
+}
+
+.product-card .card-text {
+  font-size: 0.9rem;
+}

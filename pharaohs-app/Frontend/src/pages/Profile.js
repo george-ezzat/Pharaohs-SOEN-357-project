@@ -69,7 +69,7 @@ const Profile = () => {
             <div className="row">
               {producerProducts.map(product => (
                 <div className="col-md-4 mb-4" key={product._id}>
-                  <div className="card">
+                  <div className="card product-card">
                     <img src={product.imageUrl} className="card-img-top" alt={product.name} />
                     <div className="card-body">
                       <h5 className="card-title">{product.name}</h5>
@@ -97,7 +97,7 @@ const Profile = () => {
             <div className="row">
               {consumerData && consumerData.cart.map(product => (
                 <div className="col-md-4 mb-4" key={product._id}>
-                  <div className="card">
+                  <div className="card product-card">
                     <img src={product.imageUrl} className="card-img-top" alt={product.name} />
                     <div className="card-body">
                       <h5 className="card-title">{product.name}</h5>
