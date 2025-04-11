@@ -8,8 +8,7 @@
 - George Ezzat (40245502)
 
 ## Project Overview
-This project consists of a frontend and backend application built with React.js and Node.js.
-
+ScanLocal aims to promote Canadian products by helping users identify the origin of grocery items through barcode scanning and manual search, while suggesting local alternatives. Built with React.js, Node.js, and MongoDB, the application provides an easy-to-use interface for making informed shopping decisions.
 ## Prerequisites
 - Node.js (v14 or higher)
 - npm (Node Package Manager)
